@@ -57,3 +57,22 @@ Built alongside my day-to-day IT work to go deeper on systems administration, mo
 | `scripts/` | PowerShell scripts |
 | `diagrams/` | Network diagrams (draw.io source + PNG) |
 
+## Build log
+
+### Week 1 – Lab foundations
+
+- Checked host hardware: virtualisation enabled in BIOS, 32 GB RAM, 500 GB free.
+- Windows 11 Home has no Hyper-V, so I used **VirtualBox**.
+- Created NAT Network `LabNet` (10.10.10.0/24) with VirtualBox DHCP disabled, so the domain controllers can run DHCP later.
+- Planned domain name, IP scheme, naming convention and VM sizing.
+- **Decision:** used `conorlab.internal` rather than `.local`. `.local` conflicts with mDNS and can't be used for public certificates. `.internal` is reserved for private use.
+
+### Week 2 – Server template and DC01
+
+- Built a Windows Server 2025 template, patched it, and generalised it with **Sysprep** so each clone gets a unique SID.
+- Deployed **DC01** from the template and configured its static IP (10.10.10.10), DNS and RDP, and renamed it, all with PowerShell.
+- Fixed a black screen on first boot after Sysprep (VirtualBox display settings, and not interrupting the specialize phase).
+- Wrote `Get-SystemInfo.ps1`, a CIM-based inventory script that exports hardware, OS and disk details to CSV.
+- **Next:** promote DC01 to a domain controller and join a Windows 11 client.
+
+
