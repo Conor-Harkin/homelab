@@ -82,6 +82,7 @@ Built alongside my day-to-day IT work to go deeper on systems administration, mo
 | **Sysprep** | A Windows tool that strips out everything unique to one install (SID, computer name, hardware-specific drivers) so it can be copied to make new machines. It's how companies build a "golden image" and deploy it to many machines. Never start the original template again after running it. |
 | **Unique SID** | A Security Identifier: the unique ID Windows gives each machine (and each user and group). Clones with the same SID can cause problems in a domain, so Sysprep removes it and each clone creates a new one on first boot. |
 | **Specialize phase** | The part of Windows setup that runs on the first boot after Sysprep. It detects the hardware, creates the new SID and applies machine-specific settings. It can take several minutes with a blank screen, and powering off during it can damage the install. |
+| **CIM** | Common Information Model: the standard way to query a Windows machine's hardware, OS and settings (for example, `Get-CimInstance Win32_OperatingSystem`). It replaced the older WMI cmdlets and works remotely over WinRM, so the same queries can run against many servers at once. |
 
 ### Week 3 – Active Directory and DNS
 
