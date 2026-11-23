@@ -107,6 +107,35 @@ Built alongside my day-to-day IT work to go deeper on systems administration, mo
 | **DNS forwarders** | Upstream DNS servers (1.1.1.1, 8.8.8.8) the DC asks for any name it doesn't host itself, which is how domain machines resolve internet names. |
 | **Conditional forwarder** | A rule that sends lookups for one specific domain to a specific DNS server. Used for partner or merged companies' domains and Azure Private DNS. |
 
+### Week 3 – Active Directory, DNS and the first client
 
+- Promoted DC01 to the first domain controller of a new forest, `conorlab.internal`, using PowerShell (`Install-ADDSForest`), after a dry run with `Test-ADDSForestInstallation`.
+- Checked the AD-integrated DNS zones and SRV records clients use to find the DC (LDAP 389, Kerberos 88, GC 3268).
+- Added a reverse lookup zone (10.10.10.0/24) with PTR registration, DNS forwarders, and a conditional forwarder.
+- Health checked with `Get-ADDomain`, `Get-ADForest` and `dcdiag /test:dns`. All tests passed.
+- Designed an OU structure for a 50-person company, and scripted OUs, department security groups, 12 users and a separate admin account (`Build-ADStructure.ps1`).
+- Redirected new computer accounts to the Workstations OU with `redircmp`.
+- Built CL01 (Windows 11 Enterprise), pointed it at DC01 for DNS and joined it to the domain. Tested by signing in as a domain user and checking group membership and Kerberos tickets.
+- **Next:** DHCP, a second domain controller, and replication.
+
+**Key concepts**
+
+| Term | What it is |
+|---|---|
+| **Forest** | The top-level boundary of Active Directory. It holds one or more domains that share a schema (the definition of every object type) and trust each other. Creating the first DC creates the forest. |
+| **AD-integrated DNS** | DNS zones stored inside Active Directory instead of in files. They replicate automatically to every DC and support secure dynamic updates, so only domain members can register records. |
+| **SRV record** | A DNS record that says which server provides a service, and on which port. Domain machines use SRV records to find domain controllers. This is why domain machines must use the DC for DNS. |
+| **LDAP (389)** | Lightweight Directory Access Protocol. How clients and apps query and update the directory: users, groups, computers. |
+| **Kerberos (88)** | The authentication protocol AD uses. Users get tickets from the DC and use them to access services, without sending their password around the network. |
+| **Global Catalog (3268)** | A searchable, partial copy of every object in the forest. Used to find objects across domains, and needed at logon for universal group membership. |
+| **Reverse lookup zone** | Maps IP addresses back to names (10.10.10.10 → dc01). Used by `nslookup`, logs and security tools to show names instead of bare IPs. |
+| **PTR registration** | Creating the pointer (PTR) record inside the reverse zone for a machine. Running `ipconfig /registerdns` makes Windows register its A and PTR records automatically. |
+| **DNS forwarders** | Upstream DNS servers (1.1.1.1, 8.8.8.8) the DC asks for any name it doesn't host itself, which is how domain machines resolve internet names. |
+| **Conditional forwarder** | A rule that sends lookups for one specific domain to a specific DNS server. Used for partner or merged companies' domains and Azure Private DNS. |
+| **OU (Organisational Unit)** | A folder in AD for organising objects. Group Policy can be linked to OUs and admin rights delegated on them. The built-in Users and Computers folders are *containers*, which can't have GPOs linked. |
+| **Global group (`GG_`)** | A security group that holds users, usually by department or role. Later combined with Domain Local groups (AGDLP) to grant access to resources. |
+| **Separate admin account** | Admins use a normal account day to day and a separate `.admin` account only for admin tasks. This limits the damage if the everyday account is compromised. |
+| **redircmp** | Changes where newly joined computers are placed, from the default Computers container to an OU, so Group Policy applies to them straight away. |
+| **Kerberos vs NTLM** | Kerberos (the default) uses tickets from the DC and needs working DNS and clocks within 5 minutes. NTLM is an older challenge-response fallback, used when connecting by IP. It's weaker (pass-the-hash) and is being phased out. |
 
 
