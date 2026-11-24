@@ -138,3 +138,32 @@ Built alongside my day-to-day IT work to go deeper on systems administration, mo
 | **Additional domain controller** | A second DC in an existing domain. It holds a full replicated copy of AD, so logons and DNS keep working if one DC fails. |
 | **Replication** | How DCs keep their copies of AD in sync. Changes copy to other DCs in the same site within seconds. `repadmin` and `dcdiag` are the main tools to check it. |
 | **DHCP failover** | Two DHCP servers sharing a scope. **Load balance** splits the leases between both (here 50/50). **Hot standby** keeps one server idle until the other fails, which is common for branch offices. |
+
+
+### Week 5 – Group Policy and Windows LAPS
+
+- Set the domain password and lockout policy (12 characters, 10-attempt lockout) and tested a lockout and unlock.
+- Created GPOs for desktop restrictions (users) and Windows Update settings (workstations), using a `USR -` / `CMP -` naming convention.
+- Imported the Microsoft Windows 11 v26H2 security baseline into a GPO and linked it to the Workstations OU.
+- Deployed **Windows LAPS**: extended the schema, granted computers self-permission, configured encrypted password backup to AD via GPO, and retrieved and rotated CL01's local admin password with `Get-LapsADPassword`.
+- Troubleshot a failed schema update: `Update-LapsADSchema` failed until I was added to Schema Admins, then failed again because DC02 was offline and DC01 hadn't completed initial sync on the Schema partition. Fixed with `repadmin /replicate`.
+- Covered GPO processing (LSDOU), Block inheritance vs Enforced, security filtering and WMI filters.
+- Broke a GPO on purpose (disabled its link), found the cause with `gpresult /r`, and fixed it.
+- **Next:** file server (FS01), share and NTFS permissions with AGDLP, mapped drives, and AD Certificate Services.
+
+**Key concepts**
+
+| Term | What it is |
+|---|---|
+| **GPO** | Group Policy Object: a set of settings applied to users or computers in the OUs it's linked to. |
+| **Password policy location** | Domain account password policy only works in a GPO linked at the domain level (the Default Domain Policy). On an OU it only affects local accounts. |
+| **Security baseline** | Microsoft's recommended security settings, packaged as importable GPOs. |
+| **Windows LAPS** | Gives each computer's local Administrator account a unique, random, auto-rotating password stored (encrypted) in AD, so one compromised PC doesn't expose them all. |
+| **Schema Admins** | The group allowed to change the AD schema (for example, adding LAPS attributes). Kept empty and only used temporarily, because schema changes are permanent and affect the whole forest. |
+| **Initial synchronisation** | After a restart, a DC won't perform FSMO operations (such as schema changes) until it has replicated with at least one partner. With DC02 offline, schema updates fail with "An operation error occurred". |
+| **LSDOU** | The order GPOs apply: Local, Site, Domain, then OUs (parent to child). The last one applied wins a conflict, so OU GPOs normally beat domain GPOs. |
+| **Block inheritance** | Set on an OU to stop GPOs from higher levels applying to it. Use sparingly, because it also blocks the Default Domain Policy. |
+| **Enforced** | Set on a GPO link so it wins every conflict below it and ignores Block inheritance. Enforced beats Block. |
+| **Security filtering** | Controls which users, computers or groups a GPO applies to. Can target specific groups, or deny "Apply group policy" to exclude one (such as IT). |
+| **WMI filter** | Applies a GPO only when a WMI query on the machine is true, such as `ProductType = "1"` for workstations. Evaluated at every refresh, so used sparingly. |
+| **gpresult / RSOP** | Show which GPOs applied to a user or computer, which were filtered out and why, and which GPO won each setting. The first tools to use when a policy isn't working. |
