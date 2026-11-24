@@ -171,30 +171,30 @@ Built alongside my day-to-day IT work to go deeper on systems administration, mo
 ### Week 6 – File server, DFS and certificates
 
 - Pre-staged FS01's computer account in the Servers OU, cloned it from the template, joined it to the domain and added a 100 GB data disk.
-- Built a Departments share with a folder per department plus a Company folder, using the AGDLP model users → Global groups (`GG_`) → Domain Local groups (`DL_FS_Dept_RW`  `_RO`) → NTFS permissions.
+- Built a **Departments** share with a folder per department plus a Company folder, using the **AGDLP** model: users → Global groups (`GG_`) → Domain Local groups (`DL_FS_<Dept>_RW` / `_RO`) → NTFS permissions.
 - Removed inherited permissions and set NTFS permissions with `icacls`. Kept share permissions broad and did access control in NTFS.
-- Enabled access-based enumeration, so users only see the folders they can open (Finance staff see Finance and Company only).
-- Created a domain-based DFS namespace (`conorlab.internalFilesDepartments`), so paths don't depend on one server.
-- Mapped G Departments for all users with a Group Policy Preference that points to the DFS path.
-- Installed AD Certificate Services on FS01 as an Enterprise Root CA (`ConorLab-Root-CA`), using temporary Enterprise Admins membership.
-- Created a ConorLab Computer certificate template, published it, and set up an auto-enrolment GPO. Tested enrolment with `Get-Certificate` and `certutil -pulse`, and checked the certificate and CA trust on CL01.
-- Next PowerShell automation for the user lifecycle (bulk onboarding and offboarding).
+- Enabled **access-based enumeration**, so users only see the folders they can open (Finance staff see Finance and Company only).
+- Created a domain-based **DFS namespace** (`\\conorlab.internal\Files\Departments`), so paths don't depend on one server.
+- Mapped **G: Departments** for all users with a Group Policy Preference that points to the DFS path.
+- Installed **AD Certificate Services** on FS01 as an Enterprise Root CA (`ConorLab-Root-CA`), using temporary Enterprise Admins membership.
+- Created a **ConorLab Computer** certificate template, published it, and set up an auto-enrolment GPO. Tested enrolment with `Get-Certificate` and `certutil -pulse`, and checked the certificate and CA trust on CL01.
+- **Next:** PowerShell automation for the user lifecycle (bulk onboarding and offboarding).
 
-Key concepts
+**Key concepts**
 
- Term  What it is 
-------
- AGDLP  The standard way to grant access Accounts go into Global groups (who they are), which go into Domain Local groups (what they can access), which get the Permissions. Permissions are never given to users directly. 
- NTFS vs share permissions  Share permissions only apply over the network; NTFS permissions apply everywhere. When both apply, the most restrictive wins. Common practice keep share permissions broad and control access with NTFS. 
- Inheritance (NTFS)  Folders inherit permissions from their parent by default. Removing inheritance (`icacls inheritancer`) stops defaults like Users Read leaking into restricted folders. 
- Access-based enumeration (ABE)  Hides folders on a share that the user has no permission to open, so they only see what's theirs. 
- DFS namespace  A domain-based path (`domainFiles...`) that points to the real share behind the scenes. You can move or replace servers without changing users' drive maps, and add extra targets for redundancy. 
- Group Policy Preferences  Settings under Preferences in a GPO (drive maps, printers, shortcuts). They configure things but users can change them, unlike Policies, which are enforced. 
- Pre-staging  Creating a computer account in the correct OU before the machine joins the domain, so the right GPOs apply from the start. 
- Certificate Authority (CA)  A server that issues digital certificates. An Enterprise CA is integrated with AD domain machines automatically trust it and can auto-enrol. 
- Root vs issuing CA  The root CA is the top of the trust chain. In production it's usually kept offline, and one or more issuing (subordinate) CAs hand out day-to-day certificates. A lab often uses a single root CA. 
- Certificate template  The blueprint for a type of certificate its purpose, validity period, and who can enrol or auto-enrol. 
- Auto-enrolment  Computers and users automatically request and renew certificates from templates they have Autoenroll permission on, set up through a GPO. 
- CRL  Certificate Revocation List a published list of certificates the CA has cancelled before their expiry. Clients check it, and if they can't reach it, certificate checks can fail. 
- Certificate expiry  Certificates are only valid until a set date. An expired certificate (on a website, VPN or LDAPS) causes sudden outages, which is why auto-renewal and monitoring matter. 
- Enterprise Admins  The forest-wide admin group, needed to install an Enterprise CA because it writes to the Configuration partition. Used temporarily, like Schema Admins. 
+| Term | What it is |
+|---|---|
+| **AGDLP** | The standard way to grant access: Accounts go into Global groups (who they are), which go into Domain Local groups (what they can access), which get the Permissions. Permissions are never given to users directly. |
+| **NTFS vs share permissions** | Share permissions only apply over the network; NTFS permissions apply everywhere. When both apply, the most restrictive wins. Common practice: keep share permissions broad and control access with NTFS. |
+| **Inheritance (NTFS)** | Folders inherit permissions from their parent by default. Removing inheritance (`icacls /inheritance:r`) stops defaults like "Users: Read" leaking into restricted folders. |
+| **Access-based enumeration (ABE)** | Hides folders on a share that the user has no permission to open, so they only see what's theirs. |
+| **DFS namespace** | A domain-based path (`\\domain\Files\...`) that points to the real share behind the scenes. You can move or replace servers without changing users' drive maps, and add extra targets for redundancy. |
+| **Group Policy Preferences** | Settings under *Preferences* in a GPO (drive maps, printers, shortcuts). They configure things but users can change them, unlike Policies, which are enforced. |
+| **Pre-staging** | Creating a computer account in the correct OU before the machine joins the domain, so the right GPOs apply from the start. |
+| **Certificate Authority (CA)** | A server that issues digital certificates. An **Enterprise CA** is integrated with AD: domain machines automatically trust it and can auto-enrol. |
+| **Root vs issuing CA** | The root CA is the top of the trust chain. In production it's usually kept offline, and one or more issuing (subordinate) CAs hand out day-to-day certificates. A lab often uses a single root CA. |
+| **Certificate template** | The blueprint for a type of certificate: its purpose, validity period, and who can enrol or auto-enrol. |
+| **Auto-enrolment** | Computers and users automatically request and renew certificates from templates they have Autoenroll permission on, set up through a GPO. |
+| **CRL** | Certificate Revocation List: a published list of certificates the CA has cancelled before their expiry. Clients check it, and if they can't reach it, certificate checks can fail. |
+| **Certificate expiry** | Certificates are only valid until a set date. An expired certificate (on a website, VPN or LDAPS) causes sudden outages, which is why auto-renewal and monitoring matter. |
+| **Enterprise Admins** | The forest-wide admin group, needed to install an Enterprise CA because it writes to the Configuration partition. Used temporarily, like Schema Admins. |
