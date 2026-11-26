@@ -1,0 +1,20 @@
+﻿<html><head><meta charset='utf-8'><title>AD Health Report</title><style>
+  body  { font-family: Segoe UI, Arial, sans-serif; margin: 24px; color: #222; }
+  h1    { color: #1F3864; margin-bottom: 4px; }
+  h2    { color: #1F3864; border-bottom: 2px solid #1F3864; padding-bottom: 4px; margin-top: 32px; }
+  .count{ color: #C00000; }
+  .note { color: #555; font-size: 13px; margin-top: 0; }
+  .ok   { color: #2E7D32; font-weight: bold; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th    { background: #1F3864; color: #fff; text-align: left; padding: 6px 10px; }
+  td    { padding: 6px 10px; border-bottom: 1px solid #ddd; }
+  tr:nth-child(even) td { background: #f4f6fa; }
+  .meta { color: #555; font-size: 13px; }
+</style></head><body>
+<h1>Active Directory Health Report</h1>
+<p class='meta'>Domain: conorlab.internal &nbsp;|&nbsp; Generated: 2026-11-26 17:48 &nbsp;|&nbsp; Run by: conor.harkin.admin &nbsp;|&nbsp; Scope: OU=CONORLAB,DC=conorlab,DC=internal</p>
+<h2>Stale accounts <span class='count'>(12)</span></h2><p class='note'>Enabled users with no sign-in for 1+ days (or never). Disable or confirm with their manager.</p><table> <colgroup><col/><col/><col/><col/><col/></colgroup> <tr><th>Name</th><th>SamAccountName</th><th>Department</th><th>LastLogon</th><th>Created</th></tr> <tr><td>Conor Harkin (Admin)</td><td>conor.harkin.admin</td><td></td><td>2026-11-23</td><td>2026-11-08</td></tr> <tr><td>Conor Harkin</td><td>conor.harkin</td><td>IT</td><td>2026-11-23</td><td>2026-11-08</td></tr> <tr><td>Aoife Byrne</td><td>aoife.byrne</td><td>Finance</td><td>2026-11-23</td><td>2026-11-08</td></tr> <tr><td>Eoin Gallagher</td><td>eoin.gallagher</td><td>Operations</td><td>Never</td><td>2026-11-08</td></tr> <tr><td>Sinead Kennedy</td><td>sinead.kennedy</td><td>Sales</td><td>Never</td><td>2026-11-08</td></tr> <tr><td>Orla Doyle</td><td>orla.doyle</td><td>IT</td><td>Never</td><td>2026-11-08</td></tr> <tr><td>Roisin McCarthy</td><td>roisin.mccarthy</td><td>Operations</td><td>Never</td><td>2026-11-08</td></tr> <tr><td>Darragh Ryan</td><td>darragh.ryan</td><td>HR</td><td>Never</td><td>2026-11-08</td></tr> <tr><td>Niamh Kelly</td><td>niamh.kelly</td><td>HR</td><td>Never</td><td>2026-11-08</td></tr> <tr><td>Sean Murphy</td><td>sean.murphy</td><td>IT</td><td>Never</td><td>2026-11-08</td></tr> <tr><td>Cian OBrien</td><td>cian.obrien</td><td>Sales</td><td>Never</td><td>2026-11-08</td></tr> <tr><td>Ciaran Walsh</td><td>ciaran.walsh</td><td>Finance</td><td>Never</td><td>2026-11-08</td></tr> </table>
+<h2>Password never expires <span class='count'>(1)</span></h2><p class='note'>Enabled users exempt from password expiry. Should only be service accounts, documented.</p><table> <colgroup><col/><col/><col/><col/><col/></colgroup> <tr><th>Name</th><th>SamAccountName</th><th>Department</th><th>PasswordLastSet</th><th>Description</th></tr> <tr><td>Orla Doyle</td><td>orla.doyle</td><td>IT</td><td>2026-11-08</td><td></td></tr> </table>
+<h2>Domain Admins <span class='count'>(2)</span></h2><p class='note'>Everyone with full control of the domain, including nested group members. Keep this list as short as possible.</p><table> <colgroup><col/><col/><col/><col/><col/></colgroup> <tr><th>Name</th><th>SamAccountName</th><th>Enabled</th><th>LastLogon</th><th>PasswordLastSet</th></tr> <tr><td>Administrator</td><td>Administrator</td><td>True</td><td>2026-11-08</td><td>2026-11-08</td></tr> <tr><td>Conor Harkin (Admin)</td><td>conor.harkin.admin</td><td>True</td><td>2026-11-23</td><td>2026-11-08</td></tr> </table>
+<h2>Locked-out accounts <span class='count'>(0)</span></h2><p class='note'>Accounts currently locked out by the lockout policy.</p><p class='ok'>Nothing to report.</p>
+</body></html>
