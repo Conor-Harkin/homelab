@@ -178,10 +178,10 @@ foreach ($row in $rows) {
 }
 
 # ---------------- Summary ----------------
-$created = ($results | Where-Object Status -eq "Created").Count
-$skipped = ($results | Where-Object Status -eq "Skipped").Count
-$failed  = ($results | Where-Object Status -eq "Failed").Count
-$preview = ($results | Where-Object Status -eq "WhatIf").Count
+$created = @($results | Where-Object Status -eq "Created").Count
+$skipped = @($results | Where-Object Status -eq "Skipped").Count
+$failed  = @($results | Where-Object Status -eq "Failed").Count
+$preview = @($results | Where-Object Status -eq "WhatIf").Count
 Write-Log "Finished. Created: $created  Would create (WhatIf): $preview  Skipped: $skipped  Failed: $failed. Log: $LogFile"
 
 $results | Format-Table EmployeeID, Name, Department, SamAccountName, Status, Detail -AutoSize | Out-String -Width 200 | Write-Host
