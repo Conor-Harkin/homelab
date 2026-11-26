@@ -198,3 +198,39 @@ Built alongside my day-to-day IT work to go deeper on systems administration, mo
 | **CRL** | Certificate Revocation List: a published list of certificates the CA has cancelled before their expiry. Clients check it, and if they can't reach it, certificate checks can fail. |
 | **Certificate expiry** | Certificates are only valid until a set date. An expired certificate (on a website, VPN or LDAPS) causes sudden outages, which is why auto-renewal and monitoring matter. |
 | **Enterprise Admins** | The forest-wide admin group, needed to install an Enterprise CA because it writes to the Configuration partition. Used temporarily, like Schema Admins. |
+
+### Week 7 – PowerShell user lifecycle automation
+
+- Set up CL01 as an **admin workstation**: VS Code, Git, and the AD module loaded from DC01 through implicit remoting in a PowerShell profile (RSAT wasn't available for this Windows build).
+- Wrote `New-BulkUsers.ps1`: creates users from a CSV, generates `first.last` usernames (removes accents and symbols, enforces the 20-character limit, numbers duplicates), skips existing EmployeeIDs so re-runs are safe, adds users to their department group, supports `-WhatIf`, and logs every action.
+- Wrote `Disable-LeaverAccount.ps1`: refuses admin and built-in accounts, backs up group memberships, disables the account, scrambles the password, removes all groups, stamps the description with date, admin and ticket, moves it to Disabled Users, and logs everything.
+- Tested end to end: a new starter signed in and got their department's G: drive, and an offboarded user lost access and couldn't sign in.
+- Found and fixed real bugs during testing: `.Count` returning nothing for single results in Windows PowerShell 5.1, and `New-ADUser` leaving half-created disabled accounts when the password was rejected.
+- Troubleshot a DHCP outage on CL01 (APIPA address) caused by one load-balance failover partner not responding.
+- **Next:** reporting scripts (stale accounts, password expiry, Domain Admins) and scheduled tasks.
+
+**Scripts**
+
+| Script | Usage |
+|---|---|
+| `New-BulkUsers.ps1` | `.\New-BulkUsers.ps1 -CsvPath .\data\new-starters.csv -WhatIf` to preview, then run without `-WhatIf`. CSV columns: EmployeeID, FirstName, LastName, Department, Title |
+| `Disable-LeaverAccount.ps1` | `.\Disable-LeaverAccount.ps1 -Identity user.name -Ticket INC1001 -WhatIf` to preview, then run without `-WhatIf`. Accepts several usernames. |
+
+Logs and group backups are written to `C:\Logs\UserLifecycle`.
+
+**Key concepts**
+
+| Term | What it is |
+|---|---|
+| **Admin workstation** | Admins manage servers remotely from their own PC (with RSAT or remoting) instead of signing into domain controllers, keeping DCs clean. |
+| **Implicit remoting** | Importing a module from another server (`Import-Module -PSSession`), so its commands can be used locally but actually run on that server. |
+| **Implicit remoting objects** | Commands imported from another server return serialised copies of objects. Piping them straight into another AD command can fail, so pass a property instead (for example `-Identity $_.SamAccountName`). |
+| **PowerShell profile** | A script that runs every time PowerShell starts (`$PROFILE`), used here to load the AD module automatically. |
+| **Execution policy** | Controls which scripts can run. `RemoteSigned` allows local scripts but requires downloaded scripts to be signed. |
+| **SupportsShouldProcess / -WhatIf** | Lets a script preview its changes without making them. Essential for anything that changes AD in bulk. |
+| **param() and validation** | Defines a script's inputs. `Mandatory` and `ValidateScript` stop it running with missing or invalid values. |
+| **try / catch** | Error handling: one failed row is logged and skipped while the rest carry on. |
+| **Idempotent script** | Safe to run more than once with the same result. The onboarding script skips EmployeeIDs that already exist. |
+| **Offboarding steps** | Disable, scramble the password, back up and remove groups, record who, when and why, move to a Disabled OU. Delete later, after a retention period. |
+| **DHCP load-balance gotcha** | In 50/50 load balance, each server only answers its share of clients (by MAC hash). If one partner silently fails, its clients get 169.254.x.x (APIPA) addresses until it's restarted or the survivor is moved to "partner down" state. |
+| **Git basics** | `git pull` gets changes from GitHub, `git add` stages changes, `git commit` saves a snapshot, and `git push` uploads it. |
