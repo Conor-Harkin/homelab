@@ -234,3 +234,36 @@ Logs and group backups are written to `C:\Logs\UserLifecycle`.
 | **Offboarding steps** | Disable, scramble the password, back up and remove groups, record who, when and why, move to a Disabled OU. Delete later, after a retention period. |
 | **DHCP load-balance gotcha** | In 50/50 load balance, each server only answers its share of clients (by MAC hash). If one partner silently fails, its clients get 169.254.x.x (APIPA) addresses until it's restarted or the survivor is moved to "partner down" state. |
 | **Git basics** | `git pull` gets changes from GitHub, `git add` stages changes, `git commit` saves a snapshot, and `git push` uploads it. |
+
+### Week 8 – Reporting, monitoring and scheduled tasks
+
+- Wrote `Get-ADHealthReport.ps1`: an HTML report (plus CSVs) of stale accounts, passwords that never expire, Domain Admins (including nested members) and locked-out accounts.
+- Wrote `Test-ServerHealth.ps1`: checks disk space (OK / WARNING / CRITICAL) and role-specific services on DC01, DC02 and FS01 using `Invoke-Command`, producing an HTML dashboard and an appended CSV history.
+- Created a **group Managed Service Account** (`gmsa_monitor`) and ran the health check as an hourly **scheduled task** on FS01 under it, so no human password is stored or needs rotating.
+- Started with least privilege (Remote Management Users), which gave "Access denied" on the DCs and nothing useful in their logs. **Lab shortcut:** added the gMSA to the DCs' Administrators group to complete the task. In production I'd use a **JEA** endpoint limited to the read-only commands the script needs.
+- Used remoting throughout: `Invoke-Command`, `New-PSSession`, `Copy-Item -ToSession` and `Enter-PSSession`.
+- Sample reports: [AD health](docs/sample-reports/ADHealthReport-sample.html) · [Server health](docs/sample-reports/ServerHealth-sample.html)
+- **Next:** virtualisation (Hyper-V inside VirtualBox, shared storage) and VMware concepts.
+
+**Scripts**
+
+| Script | Usage |
+|---|---|
+| `Get-ADHealthReport.ps1` | `.\Get-ADHealthReport.ps1 -Open` (default 90-day stale threshold). Use `-StaleDays` to change it. |
+| `Test-ServerHealth.ps1` | Runs hourly on FS01 as a scheduled task under `gmsa_monitor`. Run manually with `.\Test-ServerHealth.ps1`. |
+
+**Key concepts**
+
+| Term | What it is |
+|---|---|
+| **lastLogonTimestamp lag** | `LastLogonDate` only updates every 9–14 days, so it's good for finding stale accounts but not for exact last sign-in times. For those, query each DC's non-replicated `lastLogon`. |
+| **Stale accounts** | Enabled accounts nobody uses. A common way in for attackers, so they should be reviewed and disabled. |
+| **Password never expires** | Should only apply to documented service accounts. On normal users it's a security finding. |
+| **Built-in Administrator** | Should be renamed, given a long vaulted password, and not used day to day. Named admin accounts are used instead. |
+| **gMSA** | Group Managed Service Account: AD generates and rotates its password automatically, and only named computers can use it. Ideal for services and scheduled tasks. |
+| **KDS root key** | A forest-wide key AD uses to generate gMSA passwords (and encrypted LAPS passwords). Created once per forest. |
+| **Log on as a batch job** | The user right an account needs to run as a scheduled task. |
+| **Least privilege** | Giving an account only the rights it needs. A service account with domain admin rights is a major risk if compromised. |
+| **JEA (Just Enough Administration)** | A restricted PowerShell endpoint that lets an account run only specific approved commands on a server, without admin rights. The proper fix for remote monitoring. |
+| **Group changes need a new ticket** | Group membership is baked into a Kerberos ticket when it's issued. After adding an account to a group, it needs a fresh sign-in or restart (or `klist purge`) before the new access works. |
+| **Admin shares (C$)** | Hidden shares for administrators. Remoting (`Copy-Item -ToSession`) is often more reliable for moving files to servers. |
